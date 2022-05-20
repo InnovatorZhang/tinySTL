@@ -1,0 +1,1080 @@
+//
+// Created by cqupt1811 on 2022/5/20.
+//
+
+/*
+ * 这个头文件包含两个模板类 unordered_set 和 unordered_multiset
+ * 功能与用法与 set 和 multiset 类似，不同的是使用 hashtable 作为底层实现机制，容器中的元素不会自动排序
+ * notes:
+ * 异常保证：
+ * tinySTL::unordered_set<Key> / tinySTL::unordered_multiset<Key> 满足基本异常保证，对以下等函数做强异常安全保证：
+ *      * emplace
+ *      * emplace_hint
+ *      * insert
+ */
+
+#ifndef TINYSTL_UNORDERED_SET_H
+#define TINYSTL_UNORDERED_SET_H
+
+#include "hashtable.h"  /* 这个头文件包含了一个模板类 hashtable */
+
+/* 首先定义自己的命名空间 */
+namespace tinySTL {
+
+    /*
+     * 模板类 unordered_set，键值不允许重复
+     * 参数 Key 代表键值类型，参数 HashFun 代表哈希函数，缺省使用 tinySTL::hash，
+     * 参数 KeyEqual 代表键值比较方式，缺省使用 tinySTL::equal_to
+     */
+    template<typename Key, typename HashFun=tinySTL::hash<Key>, typename KeyEqual=tinySTL::equal_to<Key>>
+    class unordered_set {
+    public:
+        /*
+         * 类中使用的别名定义，使用hashtable的型别
+         */
+        typedef hashtable<Key, HashFun, KeyEqual> base_type;
+
+        typedef typename base_type::allocator_type allocator_type;
+        typedef typename base_type::key_type key_type;
+        typedef typename base_type::value_type value_type;
+        typedef typename base_type::hasher hasher;
+        typedef typename base_type::key_equal key_equal;
+
+        typedef typename base_type::size_type size_type;
+        typedef typename base_type::difference_type difference_type;
+        typedef typename base_type::pointer pointer;
+        typedef typename base_type::const_pointer const_pointer;
+        typedef typename base_type::reference reference;
+        typedef typename base_type::const_reference const_reference;
+
+        /*
+         * 定义迭代器别名
+         */
+        /* 因为unordered_set不允许修改值,所以定义iterator为const_iterator */
+        typedef typename base_type::const_iterator iterator;
+        typedef typename base_type::const_iterator const_iterator;
+        typedef typename base_type::const_local_iterator local_iterator;
+        typedef typename base_type::const_local_iterator const_local_iterator;
+
+        /*
+         * 返回空间配置器实例
+         */
+        allocator_type get_allocator() const {
+            ht_.get_allocator();
+        }
+
+    private:
+        /*
+         * 使用hashtable作为底层实现
+         */
+        base_type ht_;
+
+    public:
+        /*
+         * 默认构造函数
+         */
+        unordered_set() : ht_(100, HashFun(), KeyEqual()) {
+
+        }
+
+        /*
+         * 显式构造函数
+         */
+        explicit unordered_set(size_type bucket_count, const HashFun &hash = HashFun(),
+                               const KeyEqual &equal = KeyEqual())
+                : ht_(bucket_count, hash, equal) {
+
+        }
+
+        /*
+         * 由迭代器间的数据构建unordered_set
+         * 类成员模板
+         */
+        template<typename InputIterator>
+        unordered_set(InputIterator first, InputIterator last,
+                      const size_type bucket_count = 100,
+                      const HashFun &hash = HashFun(),
+                      const KeyEqual &equal = KeyEqual())
+                :ht_(tinySTL::max(bucket_count, static_cast<size_type>(tinySTL::distance(first, last))), hash, equal) {
+            for (; first != last; ++first) {
+                ht_.insert_unique_noresize(*first);
+            }
+        }
+
+        /*
+         * 支持使用初始化列表对unordered_set初始化，即{}的形式
+         */
+        unordered_set(std::initializer_list<value_type> i_list,
+                      const size_type bucket_count = 100,
+                      const HashFun &hash = HashFun(),
+                      const KeyEqual &equal = KeyEqual())
+                : ht_(tinySTL::max(bucket_count, static_cast<size_type>(i_list.size())), hash, equal) {
+            for (auto first = i_list.begin(), last = i_list.end(); first != last; ++first) {
+                ht_.insert_unique_noresize(*first);
+            }
+        }
+
+        /*
+         * 拷贝构造函数
+         */
+        unordered_set(const unordered_set &rhs) : ht_(rhs.ht_) {
+
+        }
+
+        /*
+         * 移动构造函数
+         */
+        unordered_set(unordered_set &&rhs) noexcept: ht_(tinySTL::move(rhs.ht_)) {
+
+        }
+
+        /*
+         * 拷贝赋值函数
+         */
+        unordered_set &operator=(const unordered_set &rhs) {
+            ht_ = rhs.ht_;
+            return *this;
+        }
+
+        /*
+         * 移动赋值函数
+         */
+        unordered_set &operator=(unordered_set &&rhs) {
+            ht_ = tinySTL::move(rhs.ht_);
+            return *this;
+        }
+
+        /*
+         * 支持初始化列表的方式赋值，即{}
+         */
+        unordered_set &operator=(std::initializer_list<value_type> i_list) {
+            ht_.clear();
+            ht_.reserve(i_list.size());
+            for (auto first = i_list.begin(), last = i_list.end(); first != last; ++first) {
+                ht_.insert_unique_noresize(*first);
+            }
+            return *this;
+        }
+
+        /*
+         * 析构函数 由系统自动生成
+         *
+         */
+        ~unordered_set() = default;
+
+    public:
+        /*
+         * 迭代器相关函数
+         */
+
+        /*
+         * 获取头部迭代器
+         */
+        iterator begin() noexcept {
+            return ht_.begin();
+        }
+
+        /*
+         * 获取头部迭代器 const重载
+         */
+        const_iterator begin() const noexcept {
+            return ht_.begin();
+        }
+
+        /*
+         * 获取尾部迭代器
+         */
+        iterator end() noexcept {
+            return ht_.end();
+        }
+
+        /*
+         * 获取尾部迭代器 const重载
+         */
+        const_iterator end() const noexcept {
+            return ht_.end();
+        }
+
+        /*
+         * 获取常量头部迭代器 const重载
+         */
+        const_iterator cbegin() const noexcept {
+            return ht_.cbegin();
+        }
+
+        /*
+         * 获取常量尾部迭代器 const重载
+         */
+        const_iterator cend() const noexcept {
+            return ht_.cend();
+        }
+
+        /*
+         * 容量相关函数
+         */
+
+        /*
+         * 查询容量是否为空
+         */
+        bool empty() const noexcept {
+            return ht_.empty();
+        }
+
+        /*
+         * 查询unordered_set大小
+         */
+        size_type size() const noexcept {
+            return ht_.size();
+        }
+
+        /*
+         * 查询unordered_set的最大容量
+         */
+        size_type max_size() const noexcept {
+            return ht_.max_size();
+        }
+
+        /*
+         * 修改容器的操作
+         */
+
+        /*
+         * 在sunordered_set中构建一个新元素
+         * 成员函数模板，可变参数模板，完美转发
+         */
+        template<typename ...Args>
+        tinySTL::pair<iterator, bool> emplace(Args &&...args) {
+            return ht_.emplace_unique(tinySTL::forward<Args>(args)...);
+        }
+
+        /*
+         * 在unordered_set中构建一个新元素 带有hint
+         * 成员函数模板，可变参数模板，完美转发
+         */
+        template<typename ...Args>
+        iterator emplace_hint(const_iterator hint, Args &&...args) {
+            return ht_.emplace_unique_use_hint(hint, tinySTL::forward<Args>(args)...);
+        }
+
+        /*
+         * 插入值到unordered_set中
+         */
+        tinySTL::pair<iterator, bool> insert(const value_type &value) {
+            return ht_.insert_unique(value);
+        }
+
+        /*
+         * 插入值到unordered_set中 移动语义
+         */
+        tinySTL::pair<iterator, bool> insert(value_type &&value) {
+            return ht_.emplace_unique(tinySTL::move(value));
+        }
+
+        /*
+         * 插入值到unordered_set中 带有hint
+         */
+        iterator insert(const_iterator hint, const value_type &value) {
+            return ht_.insert_unique_use_hint(hint, value);
+        }
+
+        /*
+         * 插入值到unordered_set中 带有hint 移动语义
+         */
+        iterator insert(const_iterator hint, value_type &&value) {
+            return ht_.insert_unique_use_hint(hint, tinySTL::move(value));
+        }
+
+        /*
+         * 将迭代器间的数据插入到unordered_set中
+         * 类成员模板
+         */
+        template<typename InputIterator>
+        void insert(InputIterator first, InputIterator last) {
+            ht_.insert_unique(first, last);
+        }
+
+        /*
+         * 删除指定元素
+         */
+        void erase(iterator it) {
+            ht_.erase(it);
+        }
+
+        /*
+         * 删除指定区间元素
+         */
+        void erase(iterator first, iterator last) {
+            ht_.erase(first, last);
+        }
+
+        /*
+         * 删除指定key值元素
+         */
+        size_type erase(const key_type &key) {
+            return ht_.erase_unique(key);
+        }
+
+        /*
+         * 清空unordered_set中所有元素
+         */
+        void clear() {
+            ht_.clear();
+        }
+
+        /*
+         * 交换两个unordered_set对象
+         */
+        void swap(unordered_set &other) noexcept {
+            ht_.swap(other.ht_);
+        }
+
+        /*
+         * 查找相关函数
+         */
+
+        /*
+         * 统计键为key的元素数量
+         */
+        size_type count(const key_type &key) const {
+            return ht_.count(key);
+        }
+
+        /*
+         * 查找指定键元素
+         */
+        iterator find(const key_type &key) {
+            return ht_.find(key);
+        }
+
+        /*
+         * 查找指定键元素 const重载
+         */
+        const_iterator find(const key_type &key) const {
+            return ht_.find(key);
+        }
+
+        /*
+         * 查找键为key的的区间
+         */
+        tinySTL::pair<iterator, iterator> equal_range(const key_type &key) {
+            return ht_.equal_range_unique(key);
+        }
+
+        /*
+         * 查找键为key的的区间 const重载
+         */
+        tinySTL::pair<const_iterator, const_iterator> equal_range(const key_type &key) const {
+            return ht_.equal_range_unique(key);
+        }
+
+        /*
+         * bucket相关接口函数
+         */
+
+        /*
+         * 获取指定bucket中链表的头部迭代器
+         */
+        local_iterator begin(size_type n) noexcept {
+            return ht_.begin(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的头部迭代器 const重载
+         */
+        const_local_iterator begin(size_type n) const noexcept {
+            return ht_.begin(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的尾部迭代器
+         */
+        local_iterator end(size_type n) noexcept {
+            return ht_.end(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的尾部迭代器 const重载
+         */
+        const_local_iterator end(size_type n) const noexcept {
+            return ht_.end(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的常量头部迭代器
+         */
+        const_local_iterator cbegin(size_type n) const noexcept {
+            return ht_.cbegin(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的常量尾部迭代器
+         */
+        const_local_iterator cend(size_type n) const noexcept {
+            return ht_.cend(n);
+        }
+
+        /*
+         * 获取bucket的数量
+         */
+        size_type bucket_count() const noexcept {
+            return ht_.bucket_count();
+        }
+
+        /*
+         * 获取最大的bucket数量
+         */
+        size_type max_bucket_count() const noexcept {
+            return ht_.max_bucket_count();
+        }
+
+        /*
+         * 获取指定bucket的中链表的长度
+         */
+        size_type bucket_size(size_type n)const noexcept{
+            return ht_.bucket_size(n);
+        }
+
+        /*
+         * 根据key获取对应bucket编号
+         */
+        size_type bucket(const key_type &key) const {
+            return ht_.bucket(key);
+        }
+
+        /*
+         * hash相关的函数
+         */
+
+        /*
+         * 获取承载因子
+         */
+        float load_factor() const noexcept {
+            return ht_.load_factor();
+        }
+
+        /*
+         * 获取最大承载因子
+         */
+        float max_load_factor() const noexcept {
+            return ht_.max_load_factor();
+        }
+
+        /*
+         * 设置最大承载因子
+         */
+        void max_load_factor(float ml) {
+            ht_.max_load_factor(ml);
+        }
+
+        /*
+         * 对hashtable容量更改为count，重新排布元素
+         */
+        void rehash(size_type count) {
+            ht_.rehash(count);
+        }
+
+        /*
+         * 分配能够装下count个元素的bucket空间
+         */
+        void reserve(size_type count) {
+            ht_.reserve(count);
+        }
+
+        /*
+         * 返回hash函数对象
+         */
+        hasher hash_fcn() const {
+            return ht_.hash_fcn();
+        }
+
+        /*
+         * 返回key比较函数对象
+         */
+        key_equal key_eq() const {
+            return ht_.key_eq();
+        }
+
+    public:
+        /*
+         * 指定此类的友元函数
+         */
+
+        /*
+         * 相等于操作符重载
+         */
+        friend bool operator==(const unordered_set &lhs, const unordered_set &rhs) {
+            return lhs.ht_.equal_to_unique(rhs.ht_);
+        }
+
+        /*
+         * 不相等于操作符重载
+         */
+        friend bool operator!=(const unordered_set &lhs, const unordered_set &rhs) {
+            return !lhs.ht_.equal_to_unique(rhs.ht_);
+        }
+    };
+
+    // ========================================================================================
+
+    /*
+     * 全局区域重载比较操作符
+     */
+
+    /*
+     * 重载相等于操作符
+     */
+    template<typename Key, typename HashFun, typename KeyEqual>
+    bool operator==(const unordered_set<Key, HashFun, KeyEqual> &lhs,
+                    const unordered_set<Key, HashFun, KeyEqual> &rhs) {
+        return lhs == rhs;
+    }
+
+    /*
+     * 重载不相等于操作符
+     */
+    template<typename Key, typename HashFun, typename KeyEqual>
+    bool operator!=(const unordered_set<Key, HashFun, KeyEqual> &lhs,
+                    const unordered_set<Key, HashFun, KeyEqual> &rhs) {
+        return lhs != rhs;
+    }
+
+    /*
+     * 重载tinySTL的swap
+     */
+    template<typename Key, typename HashFun, typename KeyEqual>
+    void swap(unordered_set<Key, HashFun, KeyEqual> &lhs,
+              unordered_set<Key, HashFun, KeyEqual> &rhs) noexcept {
+        return lhs.swap(rhs);
+    }
+
+    // ===========================================================================================
+
+    /*
+     * 模板类 unordered_multiset，键值允许重复
+     * 参数 Key 代表键值类型，参数 HashFun 代表哈希函数，缺省使用 tinySTL::hash，
+     * 参数 KeyEqual 代表键值比较方式，缺省使用 tinySTL::equal_to
+     */
+    template<typename Key, typename HashFun=tinySTL::hash<Key>, typename KeyEqual=tinySTL::equal_to<Key>>
+    class unordered_multiset {
+    public:
+        /*
+         * 类中使用的别名定义，使用hashtable的型别
+         */
+        typedef hashtable<Key, HashFun, KeyEqual> base_type;
+
+        typedef typename base_type::allocator_type allocator_type;
+        typedef typename base_type::key_type key_type;
+        typedef typename base_type::value_type value_type;
+        typedef typename base_type::hasher hasher;
+        typedef typename base_type::key_equal key_equal;
+
+        typedef typename base_type::size_type size_type;
+        typedef typename base_type::difference_type difference_type;
+        typedef typename base_type::pointer pointer;
+        typedef typename base_type::const_pointer const_pointer;
+        typedef typename base_type::reference reference;
+        typedef typename base_type::const_reference const_reference;
+
+        /*
+         * 定义迭代器别名
+         */
+        /* 因为unordered_multiset不允许修改值,所以定义iterator为const_iterator */
+        typedef typename base_type::const_iterator iterator;
+        typedef typename base_type::const_iterator const_iterator;
+        typedef typename base_type::const_local_iterator local_iterator;
+        typedef typename base_type::const_local_iterator const_local_iterator;
+
+        /*
+         * 返回空间配置器实例
+         */
+        allocator_type get_allocator() const {
+            ht_.get_allocator();
+        }
+
+    private:
+        /*
+         * 使用hashtable作为底层实现
+         */
+        base_type ht_;
+
+    public:
+        /*
+         * 默认构造函数
+         */
+        unordered_multiset() : ht_(100, HashFun(), KeyEqual()) {
+
+        }
+
+        /*
+         * 显式构造函数
+         */
+        explicit unordered_multiset(size_type bucket_count, const HashFun &hash = HashFun(),
+                                    const KeyEqual &equal = KeyEqual())
+                : ht_(bucket_count, hash, equal) {
+
+        }
+
+        /*
+         * 由迭代器间的数据构建unordered_multiset
+         * 类成员模板
+         */
+        template<typename InputIterator>
+        unordered_multiset(InputIterator first, InputIterator last,
+                           const size_type bucket_count = 100,
+                           const HashFun &hash = HashFun(),
+                           const KeyEqual &equal = KeyEqual())
+                :ht_(tinySTL::max(bucket_count, static_cast<size_type>(tinySTL::distance(first, last))), hash, equal) {
+            for (; first != last; ++first) {
+                ht_.insert_multi_noresize(*first);
+            }
+        }
+
+        /*
+         * 支持使用初始化列表对unordered_multiset初始化，即{}的形式
+         */
+        unordered_multiset(std::initializer_list<value_type> i_list,
+                           const size_type bucket_count = 100,
+                           const HashFun &hash = HashFun(),
+                           const KeyEqual &equal = KeyEqual())
+                : ht_(tinySTL::max(bucket_count, static_cast<size_type>(i_list.size())), hash, equal) {
+            for (auto first = i_list.begin(), last = i_list.end(); first != last; ++first) {
+                ht_.insert_multi_noresize(*first);
+            }
+        }
+
+        /*
+         * 拷贝构造函数
+         */
+        unordered_multiset(const unordered_multiset &rhs) : ht_(rhs.ht_) {
+
+        }
+
+        /*
+         * 移动构造函数
+         */
+        unordered_multiset(unordered_multiset &&rhs) noexcept: ht_(tinySTL::move(rhs.ht_)) {
+
+        }
+
+        /*
+         * 拷贝赋值函数
+         */
+        unordered_multiset &operator=(const unordered_multiset &rhs) {
+            ht_ = rhs.ht_;
+            return *this;
+        }
+
+        /*
+         * 移动赋值函数
+         */
+        unordered_multiset &operator=(unordered_multiset &&rhs) {
+            ht_ = tinySTL::move(rhs.ht_);
+            return *this;
+        }
+
+        /*
+         * 支持初始化列表的方式赋值，即{}
+         */
+        unordered_multiset &operator=(std::initializer_list<value_type> i_list) {
+            ht_.clear();
+            ht_.reserve(i_list.size());
+            for (auto first = i_list.begin(), last = i_list.end(); first != last; ++first) {
+                ht_.insert_multi_noresize(*first);
+            }
+            return *this;
+        }
+
+        /*
+         * 析构函数 由系统自动生成
+         *
+         */
+        ~unordered_multiset() = default;
+
+    public:
+        /*
+         * 迭代器相关函数
+         */
+
+        /*
+         * 获取头部迭代器
+         */
+        iterator begin() noexcept {
+            return ht_.begin();
+        }
+
+        /*
+         * 获取头部迭代器 const重载
+         */
+        const_iterator begin() const noexcept {
+            return ht_.begin();
+        }
+
+        /*
+         * 获取尾部迭代器
+         */
+        iterator end() noexcept {
+            return ht_.end();
+        }
+
+        /*
+         * 获取尾部迭代器 const重载
+         */
+        const_iterator end() const noexcept {
+            return ht_.end();
+        }
+
+        /*
+         * 获取常量头部迭代器 const重载
+         */
+        const_iterator cbegin() const noexcept {
+            return ht_.cbegin();
+        }
+
+        /*
+         * 获取常量尾部迭代器 const重载
+         */
+        const_iterator cend() const noexcept {
+            return ht_.cend();
+        }
+
+        /*
+         * 容量相关函数
+         */
+
+        /*
+         * 查询容量是否为空
+         */
+        bool empty() const noexcept {
+            return ht_.empty();
+        }
+
+        /*
+         * 查询unordered_multiset大小
+         */
+        size_type size() const noexcept {
+            return ht_.size();
+        }
+
+        /*
+         * 查询unordered_multiset的最大容量
+         */
+        size_type max_size() const noexcept {
+            return ht_.max_size();
+        }
+
+        /*
+         * 修改容器的操作
+         */
+
+        /*
+         * 在unordered_multiset中构建一个新元素
+         * 成员函数模板，可变参数模板，完美转发
+         */
+        template<typename ...Args>
+        iterator emplace(Args &&...args) {
+            return ht_.emplace_multi(tinySTL::forward<Args>(args)...);
+        }
+
+        /*
+         * 在unordered_multiset中构建一个新元素 带有hint
+         * 成员函数模板，可变参数模板，完美转发
+         */
+        template<typename ...Args>
+        iterator emplace_hint(const_iterator hint, Args &&...args) {
+            return ht_.emplace_multi_use_hint(hint, tinySTL::forward<Args>(args)...);
+        }
+
+        /*
+         * 插入值到unordered_multiset中
+         */
+        iterator insert(const value_type &value) {
+            return ht_.insert_multi(value);
+        }
+
+        /*
+         * 插入值到unordered_multiset中 移动语义
+         */
+        iterator insert(value_type &&value) {
+            return ht_.emplace_multi(tinySTL::move(value));
+        }
+
+        /*
+         * 插入值到unordered_multiset中 带有hint
+         */
+        iterator insert(const_iterator hint, const value_type &value) {
+            return ht_.insert_multi_use_hint(hint, value);
+        }
+
+        /*
+         * 插入值到unordered_multiset中 带有hint 移动语义
+         */
+        iterator insert(const_iterator hint, value_type &&value) {
+            return ht_.insert_multi_use_hint(hint, tinySTL::move(value));
+        }
+
+        /*
+         * 将迭代器间的数据插入到unordered_multiset中
+         * 类成员模板
+         */
+        template<typename InputIterator>
+        void insert(InputIterator first, InputIterator last) {
+            ht_.insert_multi(first, last);
+        }
+
+        /*
+         * 删除指定元素
+         */
+        void erase(iterator it) {
+            ht_.erase(it);
+        }
+
+        /*
+         * 删除指定区间元素
+         */
+        void erase(iterator first, iterator last) {
+            ht_.erase(first, last);
+        }
+
+        /*
+         * 删除指定key值元素
+         */
+        size_type erase(const key_type &key) {
+            return ht_.erase_multi(key);
+        }
+
+        /*
+         * 清空unordered_multiset中所有元素
+         */
+        void clear() {
+            ht_.clear();
+        }
+
+        /*
+         * 交换两个unordered_multiset对象
+         */
+        void swap(unordered_multiset &other) noexcept {
+            ht_.swap(other.ht_);
+        }
+
+        /*
+         * 查找相关函数
+         */
+
+        /*
+         * 统计键为key的元素数量
+         */
+        size_type count(const key_type &key) const {
+            return ht_.count(key);
+        }
+
+        /*
+         * 查找指定键元素
+         */
+        iterator find(const key_type &key) {
+            return ht_.find(key);
+        }
+
+        /*
+         * 查找指定键元素 const重载
+         */
+        const_iterator find(const key_type &key) const {
+            return ht_.find(key);
+        }
+
+        /*
+         * 查找键为key的的区间
+         */
+        tinySTL::pair<iterator, iterator> equal_range(const key_type &key) {
+            return ht_.equal_range_multi(key);
+        }
+
+        /*
+         * 查找键为key的的区间 const重载
+         */
+        tinySTL::pair<const_iterator, const_iterator> equal_range(const key_type &key) const {
+            return ht_.equal_range_multi(key);
+        }
+
+        /*
+         * bucket相关接口函数
+         */
+
+        /*
+         * 获取指定bucket中链表的头部迭代器
+         */
+        local_iterator begin(size_type n) noexcept {
+            return ht_.begin(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的头部迭代器 const重载
+         */
+        const_local_iterator begin(size_type n) const noexcept {
+            return ht_.begin(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的尾部迭代器
+         */
+        local_iterator end(size_type n) noexcept {
+            return ht_.end(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的尾部迭代器 const重载
+         */
+        const_local_iterator end(size_type n) const noexcept {
+            return ht_.end(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的常量头部迭代器
+         */
+        const_local_iterator cbegin(size_type n) const noexcept {
+            return ht_.cbegin(n);
+        }
+
+        /*
+         * 获取指定bucket中链表的常量尾部迭代器
+         */
+        const_local_iterator cend(size_type n) const noexcept {
+            return ht_.cend(n);
+        }
+
+        /*
+         * 获取bucket的数量
+         */
+        size_type bucket_count() const noexcept {
+            return ht_.bucket_count();
+        }
+
+        /*
+         * 获取最大的bucket数量
+         */
+        size_type max_bucket_count() const noexcept {
+            return ht_.max_bucket_count();
+        }
+
+        /*
+         * 获取指定bucket的中链表的长度
+         */
+        size_type bucket_size(size_type n)const noexcept{
+            return ht_.bucket_size(n);
+        }
+
+        /*
+         * 根据key获取对应bucket编号
+         */
+        size_type bucket(const key_type &key) const {
+            return ht_.bucket(key);
+        }
+
+        /*
+         * hash相关的函数
+         */
+
+        /*
+         * 获取承载因子
+         */
+        float load_factor() const noexcept {
+            return ht_.load_factor();
+        }
+
+        /*
+         * 获取最大承载因子
+         */
+        float max_load_factor() const noexcept {
+            return ht_.max_load_factor();
+        }
+
+        /*
+         * 设置最大承载因子
+         */
+        void max_load_factor(float ml) {
+            ht_.max_load_factor(ml);
+        }
+
+        /*
+         * 对hashtable容量更改为count，重新排布元素
+         */
+        void rehash(size_type count) {
+            ht_.rehash(count);
+        }
+
+        /*
+         * 分配能够装下count个元素的bucket空间
+         */
+        void reserve(size_type count) {
+            ht_.reserve(count);
+        }
+
+        /*
+         * 返回hash函数对象
+         */
+        hasher hash_fcn() const {
+            return ht_.hash_fcn();
+        }
+
+        /*
+         * 返回key比较函数对象
+         */
+        key_equal key_eq() const {
+            return ht_.key_eq();
+        }
+
+    public:
+        /*
+         * 指定此类的友元函数
+         */
+
+        /*
+         * 相等于操作符重载
+         */
+        friend bool operator==(const unordered_multiset &lhs, const unordered_multiset &rhs) {
+            return lhs.ht_.equal_to_multi(rhs.ht_);
+        }
+
+        /*
+         * 不相等于操作符重载
+         */
+        friend bool operator!=(const unordered_multiset &lhs, const unordered_multiset &rhs) {
+            return !lhs.ht_.equal_to_multi(rhs.ht_);
+        }
+    };
+
+    // ========================================================================================
+
+    /*
+     * 全局区域重载比较操作符
+     */
+
+    /*
+     * 重载相等于操作符
+     */
+    template<typename Key, typename HashFun, typename KeyEqual>
+    bool operator==(const unordered_multiset<Key, HashFun, KeyEqual> &lhs,
+                    const unordered_multiset<Key, HashFun, KeyEqual> &rhs) {
+        return lhs == rhs;
+    }
+
+    /*
+     * 重载不相等于操作符
+     */
+    template<typename Key, typename HashFun, typename KeyEqual>
+    bool operator!=(const unordered_multiset<Key, HashFun, KeyEqual> &lhs,
+                    const unordered_multiset<Key, HashFun, KeyEqual> &rhs) {
+        return lhs != rhs;
+    }
+
+    /*
+     * 重载tinySTL的swap
+     */
+    template<typename Key, typename HashFun, typename KeyEqual>
+    void swap(unordered_multiset<Key, HashFun, KeyEqual> &lhs,
+              unordered_multiset<Key, HashFun, KeyEqual> &rhs) noexcept {
+        return lhs.swap(rhs);
+    }
+
+}  // namespace tinySTL
+
+#endif //TINYSTL_UNORDERED_SET_H
