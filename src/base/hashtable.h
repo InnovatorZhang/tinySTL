@@ -177,7 +177,7 @@ namespace tinySTL {
      * class Pointer = T *, class Reference = T &>
      * struct iterator{ ... }
      * 可以自动定义迭代器所需的五种类型
-     * list 的迭代器属于双向迭代器类型
+     * hashtable 的迭代器属于单向迭代器类型
      */
     template<typename T, typename HashFun, typename KeyEqual>
     struct ht_iterator_base : public tinySTL::iterator<tinySTL::forward_iterator_tag, T> {
@@ -482,7 +482,7 @@ namespace tinySTL {
      * class Pointer = T *, class Reference = T &>
      * struct iterator{ ... }
      * 可以自动定义迭代器所需的五种类型
-     * list 的迭代器属于双向迭代器类型
+     * hashtable 的迭代器属于单向迭代器类型
      */
     template<typename T>
     struct ht_local_iterator : public tinySTL::iterator<tinySTL::forward_iterator_tag, T> {

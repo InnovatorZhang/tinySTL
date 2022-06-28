@@ -103,7 +103,7 @@ namespace tinySTL {
         }
 
         /*
-         * 支持使用初始化列表对unordered_set初始化，即{}的形式
+         * 支持使用初始化列表对unordered_map初始化，即{}的形式
          */
         unordered_map(std::initializer_list<value_type> i_list,
                       const size_type bucket_count = 100,
@@ -673,7 +673,7 @@ namespace tinySTL {
         }
 
         /*
-         * 支持使用初始化列表对unordered_set初始化，即{}的形式
+         * 支持使用初始化列表对unordered_map初始化，即{}的形式
          */
         unordered_multimap(std::initializer_list<value_type> i_list,
         const size_type bucket_count = 100,

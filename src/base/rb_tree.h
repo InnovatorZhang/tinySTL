@@ -285,7 +285,7 @@ namespace tinySTL {
     }
 
     /*
-     * 找到以x为根节点的最小值
+     * 找到以x为根节点的最大值
      */
     template<typename NodePtr>
     NodePtr rb_tree_max(NodePtr x) noexcept {
@@ -655,7 +655,7 @@ namespace tinySTL {
      * class Pointer = T *, class Reference = T &>
      * struct iterator{ ... }
      * 可以自动定义迭代器所需的五种类型
-     * list 的迭代器属于双向迭代器类型
+     * 红黑树 的迭代器属于双向迭代器类型
      */
     template<typename T>
     struct rb_tree_iterator_base : public tinySTL::iterator<tinySTL::bidirectional_iterator_tag, T> {
