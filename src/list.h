@@ -930,6 +930,7 @@ namespace tinySTL {
         void swap(list &rhs) noexcept {
             /* 交换一下尾节点指针与size_即可 */
             tinySTL::swap(node_, rhs.node_);
+            tinySTL::swap(size_, rhs.size_);
         }
 
         /*
