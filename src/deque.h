@@ -572,7 +572,7 @@ namespace tinySTL {
         /*
          * 返回常量反向尾部迭代器
          */
-        const_iterator crend() const noexcept {
+        const_reverse_iterator crend() const noexcept {
             return rend();
         }
 
