@@ -1173,14 +1173,14 @@ namespace tinySTL {
         /*
          * 获取常量反向头部迭代器
          */
-        const_iterator crbegin() const noexcept {
+        const_reverse_iterator crbegin() const noexcept {
             return rbegin();
         }
 
         /*
          * 获取常量反向尾部迭代器
          */
-        const_iterator crend() const noexcept {
+        const_reverse_iterator crend() const noexcept {
             return rend();
         }
 

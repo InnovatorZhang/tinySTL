@@ -875,7 +875,7 @@ namespace tinySTL {
         /*
          * 获取第一个节点位置的迭代器 const重载
          */
-        iterator M_begin() const noexcept {
+        const_iterator M_begin() const noexcept {
             for (size_type n = 0; n < bucket_size_; ++n) {
                 if (buckets_[n]) {
                     /* 找到第一个有节点的位置就返回 */

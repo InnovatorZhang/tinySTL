@@ -604,7 +604,7 @@ namespace tinySTL {
          * 返回反向迭代器头部 const重载版
          */
         const_reverse_iterator rbegin() const noexcept {
-            return reverse_iterator(end());
+            return const_reverse_iterator(end());
         }
 
         /*
@@ -618,7 +618,7 @@ namespace tinySTL {
          * 返回反向迭代器尾部 const重载版
          */
         const_reverse_iterator rend() const noexcept {
-            return reverse_iterator(begin());
+            return const_reverse_iterator(begin());
         }
 
         /*
