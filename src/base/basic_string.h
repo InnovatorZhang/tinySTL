@@ -1467,7 +1467,12 @@ namespace tinySTL {
             THROW_LENGTH_ERROR_IF(n > max_size(), "n can not larger than max_size()"
                                                   "in basic_string<Char,Traits>::reserve(n)");
             iterator new_buffer = data_allocator::allocate(n);
-            char_traits::move(new_buffer, buffer_, size_);
+            try{
+                char_traits::move(new_buffer, buffer_, size_);
+                data_allocator::deallocate(buffer_);
+            }catch(...){
+                data_allocator::deallocate(new_buffer);
+            }
             buffer_ = new_buffer;
             cap_ = n;
         }
