@@ -737,7 +737,7 @@ namespace tinySTL {
         /*
          * 获取位置n出的字符 const重载
          */
-        reference at(size_type n) const {
+        const_reference at(size_type n) const {
             THROW_OUT_OF_RANGE_IF(n >= size_, "basic_string<Char, Traits>::at()"
                                               "subscript out of range");
             return (*this)[n];
