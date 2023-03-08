@@ -716,7 +716,7 @@ namespace tinySTL {
         /*
          * 重载 [] 运算符 const重载
          */
-        reference operator[](size_type n) const {
+        const_reference operator[](size_type n) const {
             TINYSTL_DEBUG(n <= size_);
             if (n == size_) {
                 /* 末尾（尾迭代器）位置的值为value_type() */
@@ -2369,6 +2369,7 @@ namespace tinySTL {
         iterator new_buffer = data_allocator::allocate(size);
         try {
             char_traits::move(new_buffer, buffer_, size);
+            data_allocator::deallocate(buffer_);
         }
         catch (...) {
             data_allocator::deallocate(new_buffer);

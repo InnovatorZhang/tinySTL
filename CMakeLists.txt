@@ -4,7 +4,7 @@ project(tinySTL)
 set(CMAKE_CXX_STANDARD 14)
 
 # build type
-set(CMAKE_BUILD_TYPE release)
+# set(CMAKE_BUILD_TYPE release)
 
 # aux_source_directory(./test DIR_FILE)
 
