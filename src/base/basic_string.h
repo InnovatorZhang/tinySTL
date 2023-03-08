@@ -1632,7 +1632,7 @@ namespace tinySTL {
     template<typename CharType, typename CharTraits>
     typename basic_string<CharType, CharTraits>::iterator // 返回值
     basic_string<CharType, CharTraits>::erase(const_iterator first, const_iterator last) {
-        if (first == begin(), last == end()) {
+        if (first == begin() && last == end()) {
             clear();
             return end();
         }

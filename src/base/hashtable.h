@@ -395,7 +395,7 @@ namespace tinySTL {
         }
 
         /*
-         * 有参构造函数，接收一个const_iterator类对象
+         * 有参构造函数，接收一个const iterator类对象
          */
         ht_const_iterator(const iterator &rhs) {
             node = rhs.node;
@@ -414,7 +414,7 @@ namespace tinySTL {
         }
 
         /*
-         * 赋值函数，接受一个const_iterator类对象
+         * 赋值函数，接受一个const iterator类对象
          */
         self &operator=(const iterator &rhs) {
             if (this != &rhs) {
@@ -623,7 +623,7 @@ namespace tinySTL {
         }
 
         /*
-         * 有参构造函数，接受一个const_local_iterator类对象
+         * 有参构造函数，接受一个const local_iterator类对象
          */
         ht_const_local_iterator(const local_iterator &rhs) : node(rhs.node) {
 
@@ -993,7 +993,7 @@ namespace tinySTL {
         }
 
         /*
-         * 返回常量头部迭代器
+         * 返回常量尾部迭代器
          */
         const_iterator cend() const noexcept {
             return end();
