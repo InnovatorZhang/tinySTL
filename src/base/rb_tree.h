@@ -69,7 +69,7 @@ namespace tinySTL {
          * 类成员模板
          */
         template<typename Ty>
-        static const key_type &get_value(const Ty &value) {
+        static const value_type &get_value(const Ty &value) {
             return value;
         }
     };
@@ -98,7 +98,7 @@ namespace tinySTL {
          * 类成员模板
          */
         template<typename Ty>
-        static const key_type &get_value(const Ty &value) {
+        static const value_type &get_value(const Ty &value) {
             return value;
         }
     };
